@@ -10,7 +10,19 @@ import commentRoutes from "./routes/comment.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import collectionRoutes from "./routes/collection.routes.js";
 
+import connectToMongo from "./db/index.js";
+
 const app = express();
+
+// Ensure DB connection is alive for every request (Serverless-ready)
+app.use(async (req, res, next) => {
+  try {
+    await connectToMongo();
+  } catch (err) {
+    console.error("DB connection error in middleware:", err);
+  }
+  next();
+});
 
 // Middleware setup - Dynamic CORS allowing localhost, custom domains, and all Vercel deployment URLs
 const allowedOrigins = [
@@ -67,3 +79,4 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/collections", collectionRoutes);
 
 export { app };
+export default app;

@@ -1,17 +1,22 @@
-import 'dotenv/config'
-import connectToMongo from './db/index.js'
-import {app} from "./app.js"
-const port = process.env.PORT || 8000;
+import 'dotenv/config';
+import connectToMongo from './db/index.js';
+import { app } from "./app.js";
 
-connectToMongo()
-.then(()=>{
-  app.on("error", ()=>{
-    console.log("ERROR", error);
-  })
-  app.listen(port, ()=>{
-    console.log(`App listening on port: ${port}`)
-  })
-})
-.catch((error)=>{
-  console.error("Mongo db connection failed", error)
-})
+const port = process.env.PORT || 5000;
+
+if (!process.env.VERCEL) {
+  connectToMongo()
+    .then(() => {
+      app.on("error", (error) => {
+        console.log("ERROR", error);
+      });
+      app.listen(port, () => {
+        console.log(`App listening on port: ${port}`);
+      });
+    })
+    .catch((error) => {
+      console.error("Mongo db connection failed", error);
+    });
+}
+
+export default app;
