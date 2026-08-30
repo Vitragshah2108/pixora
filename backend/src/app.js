@@ -12,37 +12,38 @@ import collectionRoutes from "./routes/collection.routes.js";
 
 const app = express();
 
-// Middleware setup
-const allowedOrigins = process.env.CORS_ORIGIN 
-  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
-  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+// Middleware setup - Dynamic CORS allowing localhost, custom domains, and all Vercel deployment URLs
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://pixora-hub.vercel.app',
+  'https://pixora-vitrag.vercel.app',
+];
 
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Private-Network", "true");
-  next();
-});
+if (process.env.CORS_ORIGIN) {
+  process.env.CORS_ORIGIN.split(',').forEach(origin => {
+    const trimmed = origin.trim();
+    if (trimmed && !allowedOrigins.includes(trimmed)) {
+      allowedOrigins.push(trimmed);
+    }
+  });
+}
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps, Postman, curl, or server-to-server)
     if (!origin) return callback(null, true);
     
-    // Allow localhost, vercel deployments, and configured origins
-    if (
-      allowedOrigins.includes(origin) ||
-      origin.includes("localhost") ||
-      origin.includes("127.0.0.1") ||
-      origin.endsWith(".vercel.app") ||
-      process.env.NODE_ENV !== "production"
-    ) {
+    // Check exact whitelist or any vercel.app preview/production subdomains
+    if (allowedOrigins.indexOf(origin) !== -1 || /^https:\/\/.*\.vercel\.app$/.test(origin)) {
       callback(null, true);
     } else {
-      callback(null, true); // Permissive fallback to prevent 500 errors
+      callback(null, true); // Permissive fallback to prevent 500 crashes
     }
   },
   credentials: true, // Allow cookies & authentication headers
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"]
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 }));
 
 app.use(express.json({ limit: "16kb" }));
