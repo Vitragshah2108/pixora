@@ -135,14 +135,13 @@ const ImageUpload = () => {
           const progressInterval = setInterval(updateProgress, 300);
 
           try {
-            // Use fetch instead of axios for file upload
-            const backendUrl = getBackendUrl();
+            // Use same-origin Next.js route for seamless zero-CORS file upload
             const authToken = session?.backendToken || session?.user?.backendToken || (typeof window !== 'undefined' ? localStorage.getItem('auth_token') : '') || '';
             const headers = {};
             if (authToken) {
               headers['Authorization'] = `Bearer ${authToken}`;
             }
-            const response = await fetch(`${backendUrl}/api/images/upload-temp`, {
+            const response = await fetch('/api/images/upload-temp', {
               method: 'POST',
               headers,
               credentials: 'include',
@@ -263,14 +262,13 @@ const ImageUpload = () => {
       };
 
       try {
-        // Use fetch for saving details too
-        const backendUrl = getBackendUrl();
+        // Use same-origin Next.js route for saving details
         const authToken = session?.backendToken || session?.user?.backendToken || (typeof window !== 'undefined' ? localStorage.getItem('auth_token') : '') || '';
         const headers = { 'Content-Type': 'application/json' };
         if (authToken) {
           headers['Authorization'] = `Bearer ${authToken}`;
         }
-        const response = await fetch(`${backendUrl}/api/images/save-details`, {
+        const response = await fetch('/api/images/save-details', {
           method: 'POST',
           headers,
           credentials: 'include',
