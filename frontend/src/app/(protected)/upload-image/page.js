@@ -62,29 +62,31 @@ const ImageUpload = () => {
 
   const suggestedTags = ['photography', 'digital art', 'graphic design', 'illustration', 'abstract', 'minimalism', '3d render'];
 
-  // Fetch user collections on mount
+  // Fetch user collections when session is available
   useEffect(() => {
     const fetchUserCollections = async () => {
       try {
         setLoadingCollections(true);
         const response = await api.get('/api/collections');
         
-        if (response.data.success) {
-          setCollections(response.data.data);
+        if (response?.data?.success) {
+          setCollections(response.data.data || []);
           // If there's a collection ID in the URL, select it
           if (initialCollectionId) {
             setSelectedCollectionId(initialCollectionId);
           }
         }
       } catch (error) {
-        console.error("Failed to fetch collections:", error);
+        setCollections([]);
       } finally {
         setLoadingCollections(false);
       }
     };
     
-    fetchUserCollections();
-  }, [initialCollectionId]);
+    if (session?.user || session?.backendToken) {
+      fetchUserCollections();
+    }
+  }, [initialCollectionId, session]);
 
   const handleFiles = async (fileList) => {
     try {

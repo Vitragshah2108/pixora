@@ -43,12 +43,18 @@ export async function POST(request) {
       body: JSON.stringify(body),
     });
     
-    const data = await response.json();
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = { success: false, message: responseText || 'Failed to save image details' };
+    }
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error('Error in save-details proxy route:', error);
     return NextResponse.json(
-      { message: error.message || 'Internal server error' },
+      { success: false, message: error.message || 'Internal server error' },
       { status: 500 }
     );
   }
