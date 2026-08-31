@@ -32,8 +32,14 @@ export const serverApi = axios.create({
   },
 });
 
-// Update baseURL dynamically before each request if needed
+// Update baseURL dynamically and attach auth token from localStorage if present
 api.interceptors.request.use((config) => {
   config.baseURL = getBackendUrl();
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('auth_token');
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
   return config;
 });

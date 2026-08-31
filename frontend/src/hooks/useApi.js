@@ -1,4 +1,3 @@
-// hooks/useApi.js
 "use client";
 
 import { useSession } from 'next-auth/react';
@@ -9,19 +8,23 @@ export const useApi = () => {
   const { data: session } = useSession();
 
   useEffect(() => {
-    // Add request interceptor
+    const token = session?.backendToken || session?.user?.backendToken;
+    if (token && typeof window !== 'undefined') {
+      localStorage.setItem('auth_token', token);
+    }
+
     const requestInterceptor = api.interceptors.request.use((config) => {
-      if (session?.backendToken) {
-        config.headers.Authorization = `Bearer ${session.backendToken}`;
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null);
+      if (activeToken && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${activeToken}`;
       }
       return config;
     });
 
     return () => {
-      // Cleanup interceptor on unmount
       api.interceptors.request.eject(requestInterceptor);
     };
-  }, [session?.backendToken]); // Only depend on the token, not the entire session object
+  }, [session]);
 
   return api;
 };

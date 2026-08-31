@@ -13,7 +13,9 @@ import {
   checkUserAvailability,
   googleLoginUser,
   getLoginHistory,
-  getUserAnalytics
+  getUserAnalytics,
+  forgotPassword,
+  resetPassword
 } from "../controllers/user.controllers.js";
 
 const router = express.Router();
@@ -24,6 +26,8 @@ router.post("/login", loginUser);
 router.post("/google-login", googleLoginUser);
 router.post("/logout", logoutUser);
 router.post("/check-availability", checkUserAvailability);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 // User profile routes (Protected)
 router.get("/me", authenticateUser, getLoggedInUser);

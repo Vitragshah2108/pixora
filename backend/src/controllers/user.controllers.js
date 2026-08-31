@@ -1,6 +1,8 @@
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { sendEmail } from "../utils/sendEmail.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -323,6 +325,119 @@ export const updateUserPassword = asyncHandler(async (req, res) => {
   await user.save();
 
   res.status(200).json(new ApiResponse(200, "Password updated successfully"));
+});
+
+/**
+ * @desc Request password reset token
+ * @route POST /api/users/forgot-password
+ * @access Public
+ */
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    throw new ApiError(400, "Please provide an email address.");
+  }
+
+  const user = await User.findOne({ email: email.toLowerCase().trim() });
+  if (!user) {
+    return res.status(200).json(
+      new ApiResponse(200, "If an account with that email exists, a password reset link has been sent.")
+    );
+  }
+
+  if (user.provider === "google") {
+    return res.status(400).json(
+      new ApiResponse(400, "This account is registered with Google Sign-In. Please use Google Login.", null)
+    );
+  }
+
+  // Generate reset token
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+  user.resetPasswordToken = hashedToken;
+  user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
+  await user.save({ validateBeforeSave: false });
+
+  // Create reset url
+  const origin = req.headers.origin || "https://pixora-hub.vercel.app";
+  const resetUrl = `${origin}/reset-password?token=${resetToken}`;
+
+  const message = `You requested a password reset for your Pixora account.\n\nPlease click the link below to reset your password:\n\n${resetUrl}\n\nThis link is valid for 1 hour.\n\nIf you did not request this, please ignore this email.`;
+
+  const html = `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #0d0f17; color: #ffffff; padding: 40px 20px; border-radius: 12px; max-width: 600px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #a855f7; font-size: 28px; margin: 0;">✨ Pixora</h1>
+        <p style="color: #94a3b8; font-size: 14px; margin-top: 5px;">Visual Inspiration & Creative Discovery</p>
+      </div>
+      <div style="background-color: #1a1d2d; padding: 30px; border-radius: 8px; border: 1px solid #2e354f;">
+        <h2 style="color: #f8fafc; font-size: 20px; margin-top: 0;">Password Reset Request</h2>
+        <p style="color: #cbd5e1; font-size: 15px; line-height: 1.6;">Hello <strong>${user.fullName || user.username}</strong>,</p>
+        <p style="color: #cbd5e1; font-size: 15px; line-height: 1.6;">We received a request to reset the password for your Pixora account.</p>
+        <div style="text-align: center; margin: 35px 0;">
+          <a href="${resetUrl}" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">Reset Password</a>
+        </div>
+        <p style="color: #94a3b8; font-size: 13px; line-height: 1.5;">Or copy and paste this link into your browser:<br><a href="${resetUrl}" style="color: #c084fc; word-break: break-all;">${resetUrl}</a></p>
+        <p style="color: #64748b; font-size: 12px; margin-top: 25px; border-top: 1px solid #2e354f; padding-top: 15px;">This link is valid for <strong>1 hour</strong>. If you did not request this, you can safely ignore this email.</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Pixora - Password Reset Request",
+      message,
+      html,
+    });
+
+    res.status(200).json(
+      new ApiResponse(200, "Password reset email sent successfully.", { resetToken })
+    );
+  } catch (error) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save({ validateBeforeSave: false });
+    throw new ApiError(500, "Email could not be sent. Please try again later.");
+  }
+});
+
+/**
+ * @desc Reset password using token
+ * @route POST /api/users/reset-password
+ * @access Public
+ */
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    throw new ApiError(400, "Token and new password are required.");
+  }
+
+  if (newPassword.length < 6) {
+    throw new ApiError(400, "Password must be at least 6 characters long.");
+  }
+
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    throw new ApiError(400, "Invalid or expired password reset token.");
+  }
+
+  user.password = newPassword;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+  await user.save();
+
+  res.status(200).json(
+    new ApiResponse(200, "Password has been reset successfully! You can now log in.")
+  );
 });
 
 /** 
