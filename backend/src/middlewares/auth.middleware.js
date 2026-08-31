@@ -1,27 +1,41 @@
 import jwt from "jsonwebtoken";
-import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 
 export const authenticateUser = async (req, res, next) => {
   try {
-    // Get token from headers
-    const token = req.cookies.token || req.header("Authorization")?.replace("Bearer ", "");
+    // Get token from Authorization header or cookies
+    const authHeader = req.header("Authorization") || req.headers["authorization"];
+    const token = (authHeader ? authHeader.replace(/^Bearer\s+/i, "") : null) || req.cookies?.token;
     
     if (!token) {
-      throw new ApiError(401, "Access denied. No token provided.");
+      return res.status(401).json({
+        success: false,
+        message: "Access denied. No token provided.",
+        statusCode: 401
+      });
     }
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password"); // Exclude password
+    const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
-      throw new ApiError(401, "User not found.");
+      return res.status(401).json({
+        success: false,
+        message: "User not found.",
+        statusCode: 401
+      });
     }
 
-    req.user = user; // Attach user data to request
-    next(); // Continue to the next middleware
+    req.user = user;
+    next();
   } catch (error) {
-    next(new ApiError(401, "Invalid or expired token."));
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired token.",
+      statusCode: 401
+    });
   }
 };
+
+export default authenticateUser;

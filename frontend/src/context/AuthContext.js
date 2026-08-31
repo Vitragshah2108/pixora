@@ -39,6 +39,14 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Sync NextAuth backendToken to localStorage for fetch calls
+  useEffect(() => {
+    const token = session?.backendToken || session?.user?.backendToken;
+    if (token && typeof window !== 'undefined') {
+      localStorage.setItem('auth_token', token);
+    }
+  }, [session]);
+
   // Use the custom hook to get the API client
   const api = useApi();
 

@@ -137,15 +137,17 @@ const ImageUpload = () => {
           try {
             // Use fetch instead of axios for file upload
             const backendUrl = getBackendUrl();
+            const authToken = session?.backendToken || session?.user?.backendToken || (typeof window !== 'undefined' ? localStorage.getItem('auth_token') : '') || '';
+            const headers = {};
+            if (authToken) {
+              headers['Authorization'] = `Bearer ${authToken}`;
+            }
             const response = await fetch(`${backendUrl}/api/images/upload-temp`, {
-            method: 'POST',
-            headers: {
-                // Don't set Content-Type with FormData - fetch sets it automatically with boundary
-              Authorization: session?.backendToken ? `Bearer ${session.backendToken}` : '',
-            },
+              method: 'POST',
+              headers,
               credentials: 'include',
               body: formData
-          });
+            });
 
             clearInterval(progressInterval);
 
@@ -263,12 +265,14 @@ const ImageUpload = () => {
       try {
         // Use fetch for saving details too
         const backendUrl = getBackendUrl();
+        const authToken = session?.backendToken || session?.user?.backendToken || (typeof window !== 'undefined' ? localStorage.getItem('auth_token') : '') || '';
+        const headers = { 'Content-Type': 'application/json' };
+        if (authToken) {
+          headers['Authorization'] = `Bearer ${authToken}`;
+        }
         const response = await fetch(`${backendUrl}/api/images/save-details`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: session?.backendToken ? `Bearer ${session.backendToken}` : '',
-          },
+          headers,
           credentials: 'include',
           body: JSON.stringify(imageData)
         });

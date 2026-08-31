@@ -95,6 +95,7 @@ export const authOptions = {
       if (!session.user) session.user = {};
       session.user.id = token.id;
       session.backendToken = token.backendToken;
+      session.user.backendToken = token.backendToken;
       return session;
     },
   },
