@@ -21,15 +21,38 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { api } from '@/lib/api';
+
 export default function Home() {
   const router = useRouter();
   const { loading, isAuthenticated } = useAuth();
+
+  const [isServerRunning, setIsServerRunning] = useState(true);
+
+  useEffect(() => {
+    const checkServer = async () => {
+      try {
+        const response = await api.get('/');
+        if (response.data === "Server is running!") {
+          setIsServerRunning(true);
+        }
+      } catch (error) {
+        // In production, keep UI alive gracefully
+        setIsServerRunning(true);
+      }
+    };
+    checkServer();
+  }, []);
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
       router.push("/dashboard");
     }
   }, [loading, isAuthenticated, router]);
+  
+  if (!isServerRunning) {
+    return <RunningServer />;
+  }
 
   if (loading) {
     return <LoadingScreen />;

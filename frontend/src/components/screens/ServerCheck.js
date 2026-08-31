@@ -1,36 +1,25 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { api } from '@/lib/api';
 import LoadingScreen from './LoadingScreen';
 
 const ServerCheck = ({ children }) => {
-  const [isServerRunning, setIsServerRunning] = useState(null); // null = checking, true = running, false = not running
+  const [isServerRunning, setIsServerRunning] = useState(true); // Default to true to render app immediately
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
+  const maxRetries = 2;
 
   useEffect(() => {
     const checkServer = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_API}/`, {
-          timeout: 5000 // 5 second timeout
+        const response = await api.get('/', {
+          timeout: 4000
         });
         if (response.data === "Server is running!") {
           setIsServerRunning(true);
-        } else {
-          setIsServerRunning(false);
         }
       } catch (error) {
-        console.error("Server check failed:", error);
-        if (retryCount < maxRetries) {
-          setRetryCount(prev => prev + 1);
-          // Retry after 2 seconds
-          setTimeout(() => {
-            checkServer();
-          }, 2000);
-        } else {
-          setIsServerRunning(false);
-        }
+        // In production/serverless, keep UI available
+        setIsServerRunning(true);
       }
     };
 

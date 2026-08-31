@@ -1,9 +1,10 @@
-"use client"
+"use client";
 import { useState, useRef, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
+import { getBackendUrl } from '@/lib/api';
 
 import {
   UploadHeader,
@@ -135,7 +136,8 @@ const ImageUpload = () => {
 
           try {
             // Use fetch instead of axios for file upload
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API || 'http://localhost:5000'}/api/images/upload-temp`, {
+            const backendUrl = getBackendUrl();
+            const response = await fetch(`${backendUrl}/api/images/upload-temp`, {
             method: 'POST',
             headers: {
                 // Don't set Content-Type with FormData - fetch sets it automatically with boundary
@@ -260,7 +262,8 @@ const ImageUpload = () => {
 
       try {
         // Use fetch for saving details too
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API || 'http://localhost:5000'}/api/images/save-details`, {
+        const backendUrl = getBackendUrl();
+        const response = await fetch(`${backendUrl}/api/images/save-details`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

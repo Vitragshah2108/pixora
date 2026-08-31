@@ -1,7 +1,19 @@
 // lib/api.js
 import axios from 'axios';
 
-const BACKEND_API = process.env.NEXT_PUBLIC_BACKEND_API || 'http://localhost:5000';
+export const getBackendUrl = () => {
+  if (process.env.NEXT_PUBLIC_BACKEND_API) {
+    return process.env.NEXT_PUBLIC_BACKEND_API;
+  }
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:5000';
+    }
+  }
+  return 'https://backend-blush-ten-49.vercel.app';
+};
+
+export const BACKEND_API = getBackendUrl();
 
 // Base axios instance without auth headers
 export const api = axios.create({
@@ -18,4 +30,10 @@ export const serverApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Update baseURL dynamically before each request if needed
+api.interceptors.request.use((config) => {
+  config.baseURL = getBackendUrl();
+  return config;
 });

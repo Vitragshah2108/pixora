@@ -58,7 +58,8 @@ export async function POST(request) {
         headers['Cookie'] = `token=${authToken}`;
       }
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/api/images/upload`, {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API || (process.env.NODE_ENV === 'production' ? 'https://backend-blush-ten-49.vercel.app' : 'http://localhost:5000');
+      const response = await fetch(`${backendUrl}/api/images/upload`, {
         method: 'POST',
         headers,
         body: forwardData,

@@ -3,11 +3,21 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
 
+const getBackendUrl = () => {
+  if (process.env.NEXT_PUBLIC_BACKEND_API) {
+    return process.env.NEXT_PUBLIC_BACKEND_API;
+  }
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    return 'https://backend-blush-ten-49.vercel.app';
+  }
+  return 'http://localhost:5000';
+};
+
 export const authOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -17,8 +27,9 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
+          const backendUrl = getBackendUrl();
           const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_BACKEND_API}/api/users/login`,
+            `${backendUrl}/api/users/login`,
             {
               identifier: credentials?.identifier,
               password: credentials?.password,
@@ -52,7 +63,8 @@ export const authOptions = {
         try {
           // Send user details to backend for saving in MongoDB
           const username = user.email.split('@')[0];
-          const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_API}/api/users/google-login`, {
+          const backendUrl = getBackendUrl();
+          const response = await axios.post(`${backendUrl}/api/users/google-login`, {
             email: user.email,
             fullName: user.name,
             profilePicture: user.image,
@@ -86,7 +98,7 @@ export const authOptions = {
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || "vitragshahisplayingchess-pixora-auth-secret",
 };
 
 const handler = NextAuth(authOptions);
