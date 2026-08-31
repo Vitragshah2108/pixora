@@ -396,10 +396,11 @@ export const forgotPassword = asyncHandler(async (req, res) => {
       new ApiResponse(200, "Password reset email sent successfully.", { resetToken })
     );
   } catch (error) {
+    console.error("Password reset email error:", error);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save({ validateBeforeSave: false });
-    throw new ApiError(500, "Email could not be sent. Please try again later.");
+    throw new ApiError(500, `Email delivery failed: ${error.message || "Please check SMTP credentials."}`);
   }
 });
 

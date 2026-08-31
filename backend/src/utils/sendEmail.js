@@ -3,19 +3,35 @@ import nodemailer from "nodemailer";
 export const sendEmail = async (options) => {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = parseInt(process.env.SMTP_PORT || "587");
-  const user = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER;
-  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.GMAIL_PASS;
+  let user = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "";
+  let pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.GMAIL_PASS || "";
+
+  // Sanitize user and pass (strip leading/trailing whitespace and all internal spaces in app passwords)
+  user = user.trim();
+  pass = pass.replace(/\s+/g, "");
 
   if (user && pass) {
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: {
-        user,
-        pass,
-      },
-    });
+    const isGmail = user.toLowerCase().endsWith("@gmail.com") || host.includes("gmail.com");
+
+    const transporterConfig = isGmail
+      ? {
+          service: "gmail",
+          auth: {
+            user,
+            pass,
+          },
+        }
+      : {
+          host,
+          port,
+          secure: port === 465,
+          auth: {
+            user,
+            pass,
+          },
+        };
+
+    const transporter = nodemailer.createTransport(transporterConfig);
 
     const message = {
       from: `"${process.env.FROM_NAME || 'Pixora'}" <${process.env.FROM_EMAIL || user}>`,
