@@ -14,17 +14,7 @@ import connectToMongo from "./db/index.js";
 
 const app = express();
 
-// Ensure DB connection is alive for every request (Serverless-ready)
-app.use(async (req, res, next) => {
-  try {
-    await connectToMongo();
-  } catch (err) {
-    console.error("DB connection error in middleware:", err);
-  }
-  next();
-});
-
-// Middleware setup - Dynamic CORS allowing localhost, custom domains, and all Vercel deployment URLs
+// 1. Comprehensive CORS & Preflight Handler (Must execute first)
 const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
@@ -41,25 +31,37 @@ if (process.env.CORS_ORIGIN) {
   });
 }
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, Postman, curl, or server-to-server)
-    if (!origin) return callback(null, true);
-    
-    // Check exact whitelist or any vercel.app preview/production subdomains
-    if (allowedOrigins.indexOf(origin) !== -1 || /^https:\/\/.*\.vercel\.app$/.test(origin)) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Permissive fallback to prevent 500 crashes
-    }
-  },
-  credentials: true, // Allow cookies & authentication headers
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-}));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Range, Cookie');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Set-Cookie');
 
-app.use(express.json({ limit: "16kb" }));
-app.use(express.urlencoded({ limit: "16kb", extended: true }));
+  // Answer preflight OPTIONS requests immediately
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
+// 2. Ensure DB connection is alive for every non-OPTIONS request
+app.use(async (req, res, next) => {
+  try {
+    await connectToMongo();
+  } catch (err) {
+    console.error("DB connection error in middleware:", err);
+  }
+  next();
+});
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
@@ -67,8 +69,11 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
   res.send("Server is running!");
 });
+app.get("/api", (req, res) => {
+  res.send("Server is running!");
+});
 
-// Register routes
+// Register routes with /api prefix
 app.use("/api/users", userRoutes);
 app.use("/api/follow", followRoutes);
 app.use("/api/images", imageRoutes);
@@ -77,6 +82,16 @@ app.use("/api/likes", likeRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/collections", collectionRoutes);
+
+// Also register routes without /api prefix for resilient serverless rewriting
+app.use("/users", userRoutes);
+app.use("/follow", followRoutes);
+app.use("/images", imageRoutes);
+app.use("/favorites", favoriteRoutes);
+app.use("/likes", likeRoutes);
+app.use("/comments", commentRoutes);
+app.use("/notifications", notificationRoutes);
+app.use("/collections", collectionRoutes);
 
 export { app };
 export default app;
