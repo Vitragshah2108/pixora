@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, User, Grid, Settings, BookmarkIcon, LogOut, Check } from "lucide-react";
+import { ChevronDown, User, Grid, Settings, BookmarkIcon, LogOut, Check, CreditCard } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
@@ -140,6 +140,14 @@ const UserMenu = ({ activeDropdown, toggleDropdown, setActiveDropdown, user, use
               >
                 <Grid className="w-5 h-5 text-gray-400" />
                 <span>Dashboard</span>
+              </Link>
+              <Link
+                href="/pricing"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-colors text-amber-300 font-medium"
+                onClick={() => setActiveDropdown(null)}
+              >
+                <CreditCard className="w-5 h-5 text-amber-400" />
+                <span>Pricing & Plans</span>
               </Link>
               <Link
                 href="/settings"

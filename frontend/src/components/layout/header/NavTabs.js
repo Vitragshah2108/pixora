@@ -1,6 +1,6 @@
 "use client";
 
-import { Compass, TrendingUp, Zap, Layers, ImagePlus, Sparkles } from "lucide-react";
+import { Compass, TrendingUp, Zap, Layers, ImagePlus, Sparkles, CreditCard } from "lucide-react";
 import Link from "next/link";
 
 const NavTabs = ({ currentTab, setCurrentTab, isCreatingMode, toggleCreatorMode }) => {
@@ -10,6 +10,7 @@ const NavTabs = ({ currentTab, setCurrentTab, isCreatingMode, toggleCreatorMode 
     { id: "trending", label: "Trending", icon: TrendingUp, href: "/tags" },
     { id: "new", label: "New", icon: Zap, href: "/upload-image" },
     { id: "collections", label: "Collections", icon: Layers, href: "/collections" },
+    { id: "pricing", label: "Pricing", icon: CreditCard, href: "/pricing" },
   ];
 
   return (

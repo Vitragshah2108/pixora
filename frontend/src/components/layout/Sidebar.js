@@ -19,6 +19,7 @@ import {
   Hash,
   Bell,
   FolderPlus,
+  CreditCard,
   X,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -57,6 +58,7 @@ const Sidebar = ({ mobileSidebarOpen, setMobileSidebarOpen }) => {
   const menuItems = [
     { name: 'Dashboard', icon: <Compass className="transition-transform duration-300 group-hover:scale-110" />, href: '/dashboard' },
     { name: 'Feed', icon: <Grid className="transition-transform duration-300 group-hover:scale-110" />, href: '/feed' },
+    { name: 'Pricing', icon: <CreditCard className="transition-transform duration-300 group-hover:scale-110 text-amber-400" />, href: '/pricing' },
     { name: 'Profile', icon: <User className="transition-transform duration-300 group-hover:scale-110" />, href: `/profile/@${user?.username || 'username'}` },
     { name: 'Likes', icon: <Heart className="transition-transform duration-300 group-hover:scale-110" />, href: '/likes' },
     { name: 'Favorites', icon: <BookmarkIcon className="transition-transform duration-300 group-hover:scale-110" />, href: '/favorites' },
