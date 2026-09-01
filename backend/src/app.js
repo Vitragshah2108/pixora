@@ -6,6 +6,7 @@ import followRoutes from "./routes/follow.routes.js";
 import imageRoutes from "./routes/image.routes.js";
 import favoriteRoutes from "./routes/favorite.routes.js";
 import likeRoutes from "./routes/like.routes.js";
+import commentRoutes from "./routes/comment.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import collectionRoutes from "./routes/collection.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
