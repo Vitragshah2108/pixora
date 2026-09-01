@@ -6,9 +6,9 @@ import followRoutes from "./routes/follow.routes.js";
 import imageRoutes from "./routes/image.routes.js";
 import favoriteRoutes from "./routes/favorite.routes.js";
 import likeRoutes from "./routes/like.routes.js";
-import commentRoutes from "./routes/comment.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import collectionRoutes from "./routes/collection.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
 
 import connectToMongo from "./db/index.js";
 
@@ -82,6 +82,7 @@ app.use("/api/likes", likeRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/collections", collectionRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Also register routes without /api prefix for resilient serverless rewriting
 app.use("/users", userRoutes);
@@ -92,6 +93,7 @@ app.use("/likes", likeRoutes);
 app.use("/comments", commentRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/collections", collectionRoutes);
+app.use("/payment", paymentRoutes);
 
 export { app };
 export default app;

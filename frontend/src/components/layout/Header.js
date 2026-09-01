@@ -164,15 +164,18 @@ const Header = () => {
   };
 
   const toggleMobileDropdown = (index) => {
-    setMobileActiveDropdown(mobileActiveDropdown === index ? null : index);
+    setMobileActiveDropdown((prev) => (prev === index ? null : index));
   };
 
-  // Close all dropdowns when clicking outside
+  // Close all dropdowns when clicking outside desktop header
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (headerRef.current && !headerRef.current.contains(event.target)) {
+      if (
+        headerRef.current &&
+        !headerRef.current.contains(event.target) &&
+        !event.target.closest('[data-mobile-menu]')
+      ) {
         setActiveDropdown(null);
-        setMobileActiveDropdown(null);
         setUserMenuOpen(false);
       }
     };
@@ -235,7 +238,11 @@ const Header = () => {
                   className="relative"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (item.hasDropdown) toggleDropdown(index);
+                    if (item.hasDropdown) {
+                      toggleDropdown(index);
+                    } else if (item.href) {
+                      navigateTo(item.href);
+                    }
                   }}
                 >
                   <motion.button
@@ -551,6 +558,7 @@ const Header = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            data-mobile-menu="true"
             className="fixed inset-y-0 right-0 z-50 w-full sm:w-96 bg-zinc-950/98 backdrop-blur-2xl border-l border-white/10 lg:hidden overflow-y-auto"
           >
             <div className="p-6">
@@ -617,7 +625,7 @@ const Header = () => {
                                   animate={{ opacity: 1, x: 0 }}
                                   transition={{ delay: idx * 0.1 }}
                                   className="flex items-center justify-between p-3 rounded-xl hover:bg-white/10 text-gray-300 hover:text-white transition-colors cursor-pointer"
-                                  onClick={() => navigateTo('/login')}
+                                  onClick={() => navigateTo(dropdownItem.href || '/feed')}
                                 >
                                   <div className="flex items-center space-x-3">
                                     <div className="p-1.5 rounded-lg bg-white/10">
@@ -648,7 +656,7 @@ const Header = () => {
                       </>
                     ) : (
                       <button className="w-full text-left p-4 rounded-xl hover:bg-white/10 text-gray-300 hover:text-white transition-colors"
-                        onClick={() => navigateTo('/login')}
+                        onClick={() => navigateTo(item.href || '/pricing')}
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-medium">{item.name}</span>
@@ -669,10 +677,10 @@ const Header = () => {
                 <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Quick Actions</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { name: "Create AI Art", icon: Sparkles, color: "from-violet-500 to-purple-500" },
-                    { name: "Browse Gallery", icon: Compass, color: "from-blue-500 to-cyan-500" },
-                    { name: "Voice Command", icon: Mic, color: "from-emerald-500 to-green-500" },
-                    { name: "3D Models", icon: Layers, color: "from-pink-500 to-rose-500" },
+                    { name: "Create AI Art", icon: Sparkles, color: "from-violet-500 to-purple-500", href: user ? "/upload-image" : "/login" },
+                    { name: "Browse Gallery", icon: Compass, color: "from-blue-500 to-cyan-500", href: "/feed" },
+                    { name: "Search & Tags", icon: Mic, color: "from-emerald-500 to-green-500", href: "/tags" },
+                    { name: "Collections", icon: Layers, color: "from-pink-500 to-rose-500", href: "/collections" },
                   ].map((action, idx) => (
                     <motion.div
                       key={idx}
@@ -682,7 +690,7 @@ const Header = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className={`p-4 rounded-2xl bg-gradient-to-br ${action.color} cursor-pointer shadow-lg`}
-                      onClick={() => navigateTo('/login')}
+                      onClick={() => navigateTo(action.href)}
                     >
                       <action.icon className="w-6 h-6 text-white mb-2" />
                       <p className="text-white font-medium text-sm">{action.name}</p>

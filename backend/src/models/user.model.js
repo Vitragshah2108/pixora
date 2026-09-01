@@ -143,6 +143,23 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    premiumPlan: {
+      type: String,
+      enum: ["free", "pro", "studio"],
+      default: "free",
+    },
+    premiumSince: {
+      type: Date,
+      default: null,
+    },
+    razorpayOrderId: {
+      type: String,
+      default: null,
+    },
+    razorpayPaymentId: {
+      type: String,
+      default: null,
+    },
     storageUsed: {
       type: Number,
       default: 0, // Storage used in KB
